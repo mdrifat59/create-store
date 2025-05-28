@@ -1,16 +1,20 @@
- @import "tailwindcss";
+@import "tailwindcss";
 
- @theme {
-     --font-Roboto-Reguler: "Roboto-Reguler";
-     --font-Roboto-Medium: "Roboto-Medium";
- }
+@theme {
+    --font-Roboto-Reguler: "Roboto-Reguler";
+    --font-Roboto-Medium: "Roboto-Medium";
+    --color-mateBlack: #626471;
+    --color-headBlack: #374151;
+    --color-iconBlue: #5090f7;
+    --color-borderColor: #d2d6dc;
+}
 
- @font-face {
-     font-family: "Roboto-Reguler";
-     src: url(../public/fonts/Roboto-Regular.ttf);
- }
+@font-face {
+    font-family: "Roboto-Reguler";
+    src: url(../public/fonts/Roboto-Regular.ttf);
+}
 
- @font-face {
-     font-family: "Roboto-Medium";
-     src: url(../public/fonts/Roboto-Medium.ttf);
- }
+@font-face {
+    font-family: "Roboto-Medium";
+    src: url(../public/fonts/Roboto-Medium.ttf);
+}
