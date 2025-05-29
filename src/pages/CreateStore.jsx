@@ -1,9 +1,88 @@
-import React from 'react'
+import axios from 'axios'
+import React, { useState } from 'react'
 import { FaEarthAsia } from 'react-icons/fa6'
 import { LuMonitor } from 'react-icons/lu'
 import { MdCategory, MdCurrencyExchange, MdOutlineEditLocation, MdOutlineEmail } from 'react-icons/md'
 
 const CreateStore = () => {
+
+    let [form, setForm] = useState({
+        name: "",
+        domain: "",
+        country: "Bangladesh",
+        currency: "BDT",
+        category: "Fashion",
+        email: "",
+    })
+    let [domainStatus, setDomainStatus] = useState(null);
+    let [errors, setErrors] = useState({});
+    let [message, setMessage] = useState("");
+
+    let handleChange = (e) => {
+        let { name, value } = e.target
+        setForm({ ...form, [name]: value })
+        setErrors({ ...errors, [name]: "" });
+    }
+
+    let validate = () => {
+        let errors = {};
+
+        if (form.name.trim().length < 3) {
+            errors.name = "Store name must be at least 3 characters.";
+        }
+
+        if (!form.domain || domainStatus !== false) {
+            errors.domain = "Domain is not available. Please try another.";
+        }
+
+        let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(form.email)) {
+            errors.email = "Please enter a valid email address.";
+        }
+
+        return errors;
+    };
+
+    let checkDomain = () => {
+        if (!form.domain) return;
+        const fullDomain = `${form.domain}.expressitbd.com`;
+
+        axios.get(`https://interview-task-green.vercel.app/task/domains/check/${fullDomain}`)
+            .then((res) => {
+                setDomainStatus(res.data.data.taken);
+            })
+            .catch(() => {
+                setDomainStatus(true);
+            });
+    };
+
+    let handlesubmit = (e) => {
+        e.preventDefault();
+        const validationErrors = validate();
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        axios.post("https://interview-task-green.vercel.app/task/stores/create", {
+            name: form.name,
+            currency: form.currency,
+            country: form.country,
+            domain: form.domain,
+            category: form.category,
+            email: form.email,
+        })
+            .then(() => {
+                setMessage("✅ Store created successfully!");
+            })
+            .catch(() => {
+                setMessage("❌ Store creation failed.");
+
+            });
+
+
+    }
     return (
         <>
             <div className="w-full h-screen flex bg-[#f3f4f6] justify-center items-center ">
@@ -11,7 +90,7 @@ const CreateStore = () => {
                     <h1 className='font-Roboto-Medium text-3xl'>Create a store</h1>
                     <h3 className='mt-5 mb-3 text-mateBlack'>Add your basic store information and complete the setup</h3>
                     <hr className=' text-[#e5e7eb]' />
-                    <div className="mt-5">
+                    <form onSubmit={handlesubmit} className="mt-5">
                         <div className="flex justify-between items-center mt-5">
                             <div className="w-[49%] flex  gap-2">
                                 <div className='mt-1'>
@@ -23,7 +102,8 @@ const CreateStore = () => {
                                 </div>
                             </div>
                             <div className="w-[49%] ">
-                                <input type="text" className='w-full border border-borderColor rounded-md p-2 outline-none' placeholder="How'd you like to call your store?" />
+                                <input type="text" name='name' onChange={handleChange} value={form.name} className={`w-full border ${errors.name ? ' border-red-500' : 'border-borderColor'} rounded-md p-2 outline-none`} placeholder="How'd you like to call your store?" />
+                                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                             </div>
                         </div>
 
@@ -38,11 +118,12 @@ const CreateStore = () => {
                                     <p className='font-Roboto-Reguler text-sm text-mateBlack'>A SEO-friendly store name is a crucial part of your success. Make sure it aligns with your brand and products.</p>
                                 </div>
                             </div>
-                            <div className="w-[49%] flex ">
-                                <input type="text" className='w-full border border-borderColor p-2 rounded-md outline-none' placeholder="enter you domain name " />
-                                <span className="bg-gray-100 p-2 rounded-r border border-l-0 border-gray-300">
+                            <div className="w-[49%] relative">
+                                <input type="text" name='domain' onChange={handleChange} value={form.domain} onBlur={checkDomain} className={`w-full relative  border ${domainStatus == true ? ' border-red-500' : 'border-borderColor'}   p-2 rounded-md outline-none`} placeholder="enter you domain name " />
+                                <span className="absolute top-0 right-0 p-2 rounded-r">
                                     .expressitbd.com
                                 </span>
+                                {domainStatus == true && errors.domain && <p className="text-red-500 text-sm mt-1">{errors.domain}</p>}
                             </div>
                         </div>
 
@@ -58,7 +139,7 @@ const CreateStore = () => {
                                 </div>
                             </div>
                             <div className="w-[49%] ">
-                                <select className='w-full border border-borderColor rounded-md p-2 outline-none'>
+                                <select name='country' onChange={handleChange} value={form.country} className='w-full border border-borderColor rounded-md p-2 outline-none'>
                                     <option value="Bangladesh">Bangladesh</option>
                                     <option value="India">India</option>
                                     <option value="United States">United States</option>
@@ -89,7 +170,7 @@ const CreateStore = () => {
                                 </div>
                             </div>
                             <div className="w-[49%] ">
-                                <select className='w-full border border-borderColor rounded-md p-2 outline-none'>
+                                <select name='category' onChange={handleChange} value={form.category} className='w-full border border-borderColor rounded-md p-2 outline-none'>
                                     <option value="Fashion">Fashion</option>
                                     <option value="Electronics">Electronics</option>
                                     <option value="Home & Kitchen">Home & Kitchen</option>
@@ -115,7 +196,8 @@ const CreateStore = () => {
                                 </div>
                             </div>
                             <div className="w-[49%] ">
-                                <select className='w-full border border-borderColor rounded-md p-2 outline-none'>
+                                <select name='currency' onChange={handleChange} value={form.currency} className='w-full border border-borderColor rounded-md p-2 outline-none'>
+                                    <option value="BDT">BDT (Taka)</option>
                                     <option value="USD">USD (US Dollar)</option>
                                     <option value="EUR">EUR (Euro)</option>
                                     <option value="GBP">GBP (British Pound)</option>
@@ -130,7 +212,6 @@ const CreateStore = () => {
                                     <option value="KRW">KRW (South Korean Won)</option>
                                     <option value="SEK">SEK (Swedish Krona)</option>
                                     <option value="NZD">NZD (New Zealand Dollar)</option>
-                                    <option value="BDT">BDT (Taka)</option>
                                 </select>
                             </div>
                         </div>
@@ -146,13 +227,15 @@ const CreateStore = () => {
                                 </div>
                             </div>
                             <div className="w-[49%] ">
-                                <input type="email" className='w-full border border-borderColor rounded-md p-2 outline-none' placeholder="You@example.com" />
+                                <input type="text" name='email' onChange={handleChange} value={form.email} className={`w-full border  ${errors.email ? ' border-red-500' : 'border-borderColor'} rounded-md p-2 outline-none`} placeholder="You@example.com" />
+                                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                             </div>
                         </div>
                         <div className='flex justify-end mt-5'>
-                            <button className='font-Roboto-Reguler py-2 px-5 cursor-pointer rounded-xl text-white bg-violet-500'>Create Store</button>
+                            <button type='submit' className='font-Roboto-Reguler py-2 px-5 cursor-pointer rounded-xl text-white bg-violet-500 disabled:opacity-50 ' disabled={domainStatus === true}  >Create Store</button>
                         </div>
-                    </div>
+                        {message && <p className="text-center text-sm mt-3">{message}</p>}
+                    </form>
                 </div>
             </div>
         </>
