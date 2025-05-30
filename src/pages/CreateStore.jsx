@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { FaEarthAsia } from 'react-icons/fa6'
 import { LuMonitor } from 'react-icons/lu'
 import { MdCategory, MdCurrencyExchange, MdOutlineEditLocation, MdOutlineEmail } from 'react-icons/md'
+import { Navigate, useNavigate } from 'react-router-dom'
 
 const CreateStore = () => {
 
@@ -16,7 +17,9 @@ const CreateStore = () => {
     })
     let [domainStatus, setDomainStatus] = useState(null);
     let [errors, setErrors] = useState({});
+    let [error, setError] = useState("");
     let [message, setMessage] = useState("");
+    const navigate = useNavigate();
 
     let handleChange = (e) => {
         let { name, value } = e.target
@@ -30,68 +33,26 @@ const CreateStore = () => {
         if (form.name.trim().length < 3) {
             errors.name = "Store name must be at least 3 characters.";
         }
-
         if (!form.domain || domainStatus !== false) {
             errors.domain = "Domain is not available. Please try another.";
         }
-
         let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         if (!emailRegex.test(form.email)) {
-            errors.email = "Please enter a valid email address.";
+            errors.email = "Invalid email format!";
         }
-
         return errors;
     };
 
-    // let checkDomain = () => {
-    //     if (!form.domain) return;
-    //     const fullDomain = `${form.domain}.expressitbd.com`;
-
-    //     axios.get(`https://interview-task-green.vercel.app/task/domains/check/${fullDomain}`)
-    //         .then((res) => {
-    //             setDomainStatus(res.data.data.taken);
-    //         })
-    //         .catch(() => {
-    //             setDomainStatus(true);
-    //         });
-    // };
-
-    // let handlesubmit = (e) => {
-    //     e.preventDefault();
-    //     const validationErrors = validate();
-    //     if (Object.keys(validationErrors).length > 0) {
-    //         setErrors(validationErrors);
-    //         return;
-    //     }
-
-    //     axios.post("https://interview-task-green.vercel.app/task/stores/create",  {
-    //         name: form.name,
-    //         currency: form.currency,
-    //         country: form.country,
-    //         domain: `${form.domain}.expressitbd.com`,
-    //         category: form.category,
-    //         email: form.email,
-    //     })
-    //         .then(() => {
-    //             setMessage("✅ Store created successfully!");
-    //         })
-    //         .catch((e) => {
-    //             setMessage("❌ Store creation failed.");
-    //             console.log(e);
-
-    //         });
-
-
-    // }
     let checkDomain = () => {
         if (!form.domain) return;
-        const fullDomain = `${form.domain.trim()}.expressitbd.com`;
-
-        fetch(`https://interview-task-green.vercel.app/task/domains/check/${fullDomain}`)
-            .then((res) => res.json())
-            .then((data) => {
-                setDomainStatus(data.data.taken);
+        const fullDomain = `${form.domain}.expressitbd.com`;
+        axios.get(`https://interview-task-green.vercel.app/task/domains/check/${fullDomain}`)
+            .then((res) => {
+                setDomainStatus(res.data.data.taken);
+                if (!form.domain || domainStatus !== false) {
+                    setError("Not Available Domain, Re-enter!")
+                }
             })
             .catch(() => {
                 setDomainStatus(true);
@@ -106,65 +67,41 @@ const CreateStore = () => {
             return;
         }
 
-        const payload = {
+        let payload = {
             name: form.name.trim(),
             currency: form.currency,
             country: form.country,
-            domain: `${form.domain.trim()}.expressitbd.com`,
+            domain: `${form.domain.trim()}`,
             category: form.category,
             email: form.email.trim(),
         };
 
-        console.log("Sending store data:", payload);
-
-        // axios.post("https://interview-task-green.vercel.app/task/stores/create", payload)
-        //     .then(() => {
-        //         setMessage("✅ Store created successfully!");
-        //     })
-        //     .catch((error) => {
-        //         if (error.response) {
-        //             console.log("🔴 Full error response:", error.response.data); // 👈 Add this line
-        //             setMessage(`❌ ${error.response.data.message || "Store creation failed."}`);
-        //         } else {
-        //             console.log("🔴 Network error:", error.message);
-        //             setMessage("❌ Network or unexpected error.");
-        //         }
-        //     });
-
-        try {
-            const response = await fetch("https://interview-task-green.vercel.app/task/stores/create", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                // the server responded with an error
-                setMessage(`❌ ${data.message || "Store creation failed."}`);
-                console.error("Server error response:", data);
-            } else {
+        axios.post("https://interview-task-green.vercel.app/task/stores/create", payload)
+            .then(() => {
                 setMessage("✅ Store created successfully!");
-            }
-        } catch (error) {
-            console.error("Unexpected error:", error);
-            setMessage("❌ Network error or unexpected failure.");
-        }
+                setTimeout(() => {
+                    navigate("/ShowProduct")
+                }, 1000);
+            })
+            .catch((error) => {
+                if (error.response) {
+                    setMessage(`❌ ${error.response.data.message || "Store creation failed."}`);
+                } else {
+                    setMessage("❌ Network or unexpected error.");
+                }
+            });
     };
 
     return (
         <>
             <div className="w-full h-screen flex bg-[#f3f4f6] justify-center items-center ">
-                <div className="w-[950px] bg-[#ffffff] rounded-xl  p-7">
-                    <h1 className='font-Roboto-Medium text-3xl'>Create a store</h1>
-                    <h3 className='mt-5 mb-3 text-mateBlack'>Add your basic store information and complete the setup</h3>
+                <div className="w-full md:w-[950px] bg-[#ffffff] rounded-xl  p-7">
+                    <h1 className='font-Roboto-Medium text-xl md:text-2xl lg:text-3xl'>Create a store</h1>
+                    <h3 className='mt-5 mb-3 text-sm md:text-base text-mateBlack'>Add your basic store information and complete the setup</h3>
                     <hr className=' text-[#e5e7eb]' />
                     <form onSubmit={handlesubmit} className="mt-5">
-                        <div className="flex justify-between items-center mt-5">
-                            <div className="w-[49%] flex  gap-2">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:justify-between lg:items-center mt-5">
+                            <div className="lg:lg:w-[49%] flex  gap-2">
                                 <div className='mt-1'>
                                     <LuMonitor className='text-iconBlue' />
                                 </div>
@@ -173,15 +110,15 @@ const CreateStore = () => {
                                     <p className='font-Roboto-Reguler text-sm text-mateBlack'>A great store name is a big part of your success. Make sure it aligns with your brand and products.</p>
                                 </div>
                             </div>
-                            <div className="w-[49%] ">
+                            <div className="lg:lg:w-[49%] ">
                                 <input type="text" name='name' onChange={handleChange} value={form.name} className={`w-full border ${errors.name ? ' border-red-500' : 'border-borderColor'} rounded-md p-2 outline-none`} placeholder="How'd you like to call your store?" />
                                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                             </div>
                         </div>
 
 
-                        <div className="flex justify-between items-center mt-5">
-                            <div className="w-[49%] flex  gap-2">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:justify-between lg:items-center mt-5">
+                            <div className="lg:w-[49%] flex  gap-2">
                                 <div className='mt-1'>
                                     <FaEarthAsia className='text-iconBlue' />
                                 </div>
@@ -190,27 +127,27 @@ const CreateStore = () => {
                                     <p className='font-Roboto-Reguler text-sm text-mateBlack'>A SEO-friendly store name is a crucial part of your success. Make sure it aligns with your brand and products.</p>
                                 </div>
                             </div>
-                            <div className="w-[49%] relative">
-                                <input type="text" name='domain' onChange={handleChange} value={form.domain} onBlur={checkDomain} className={`w-full relative  border ${domainStatus == true ? ' border-red-500' : 'border-borderColor'}   p-2 rounded-md outline-none`} placeholder="enter you domain name " />
+                            <div className="lg:w-[49%] relative">
+                                <input type="text" name='domain' onChange={handleChange} value={form.domain} onBlur={checkDomain} className={`w-full relative  border ${domainStatus == true ? ' border-red-500' : 'border-borderColor'} p-2 rounded-md outline-none`} placeholder="enter you domain name " />
                                 <span className="absolute top-0 right-0 p-2 rounded-r">
                                     .expressitbd.com
                                 </span>
-                                {domainStatus == true && errors.domain && <p className="text-red-500 text-sm mt-1">{errors.domain}</p>}
+                                {error && domainStatus == true && <p className="text-red-500 text-sm mt-1">{error}</p>}
                             </div>
                         </div>
 
 
-                        <div className="flex justify-between items-center mt-5">
-                            <div className="w-[49%] flex  gap-2">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:justify-between lg:items-center mt-5">
+                            <div className="lg:w-[49%] flex  gap-2">
                                 <div className='mt-1'>
                                     <MdOutlineEditLocation className='text-iconBlue' />
                                 </div>
                                 <div>
-                                    <h3 className='font-Roboto-Medium text-headBlack'>Give your online store a name</h3>
-                                    <p className='font-Roboto-Reguler text-sm text-mateBlack'>A great store name is a big part of your success. Make sure it aligns with your brand and products.</p>
+                                    <h3 className='font-Roboto-Medium text-headBlack'>Where's your store location?</h3>
+                                    <p className='font-Roboto-Reguler text-sm text-mateBlack'> Set your store's default location so we can optimize store access and speed for your customers. </p>
                                 </div>
                             </div>
-                            <div className="w-[49%] ">
+                            <div className="lg:w-[49%] ">
                                 <select name='country' onChange={handleChange} value={form.country} className='w-full border border-borderColor rounded-md p-2 outline-none'>
                                     <option value="Bangladesh">Bangladesh</option>
                                     <option value="India">India</option>
@@ -231,17 +168,17 @@ const CreateStore = () => {
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center mt-5">
-                            <div className="w-[49%] flex  gap-2">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:justify-between lg:items-center mt-5">
+                            <div className="lg:w-[49%] flex  gap-2">
                                 <div className='mt-1'>
                                     <MdCategory className='text-iconBlue' />
                                 </div>
                                 <div>
                                     <h3 className='font-Roboto-Medium text-headBlack'>What's your Category?</h3>
-                                    <p className='font-Roboto-Reguler text-sm text-mateBlack'>Set your store's default location so we can optimize store access and speed for your customers.</p>
+                                    <p className='font-Roboto-Reguler text-sm text-mateBlack'>Set your store's default category so that we can optimize store access and speed for your customers.</p>
                                 </div>
                             </div>
-                            <div className="w-[49%] ">
+                            <div className="lg:w-[49%] ">
                                 <select name='category' onChange={handleChange} value={form.category} className='w-full border border-borderColor rounded-md p-2 outline-none'>
                                     <option value="Fashion">Fashion</option>
                                     <option value="Electronics">Electronics</option>
@@ -257,8 +194,8 @@ const CreateStore = () => {
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center mt-5">
-                            <div className="w-[49%] flex  gap-2">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:justify-between lg:items-center mt-5">
+                            <div className="lg:w-[49%] flex  gap-2">
                                 <div className='mt-1'>
                                     <MdCurrencyExchange className='text-iconBlue' />
                                 </div>
@@ -267,7 +204,7 @@ const CreateStore = () => {
                                     <p className='font-Roboto-Reguler text-sm text-mateBlack'>This is the main currency you wish to sell in.</p>
                                 </div>
                             </div>
-                            <div className="w-[49%] ">
+                            <div className="lg:w-[49%] ">
                                 <select name='currency' onChange={handleChange} value={form.currency} className='w-full border border-borderColor rounded-md p-2 outline-none'>
                                     <option value="BDT">BDT (Taka)</option>
                                     <option value="USD">USD (US Dollar)</option>
@@ -288,8 +225,8 @@ const CreateStore = () => {
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center mt-5">
-                            <div className="w-[49%] flex  gap-2">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:justify-between lg:items-center mt-5">
+                            <div className="lg:w-[49%] flex  gap-2">
                                 <div className='mt-1'>
                                     <MdOutlineEmail className='text-iconBlue' />
                                 </div>
@@ -298,13 +235,13 @@ const CreateStore = () => {
                                     <p className='font-Roboto-Reguler text-sm text-mateBlack'>This is the email you'll use to send notifications to and receive orders from customers.</p>
                                 </div>
                             </div>
-                            <div className="w-[49%] ">
+                            <div className="lg:w-[49%] ">
                                 <input type="text" name='email' onChange={handleChange} value={form.email} className={`w-full border  ${errors.email ? ' border-red-500' : 'border-borderColor'} rounded-md p-2 outline-none`} placeholder="You@example.com" />
                                 {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                             </div>
                         </div>
                         <div className='flex justify-end mt-5'>
-                            <button type='submit' className='font-Roboto-Reguler py-2 px-5 cursor-pointer rounded-xl text-white bg-violet-500 disabled:opacity-50 ' disabled={domainStatus === true}  >Create Store</button>
+                            <button type='submit' className='font-Roboto-Reguler py-2 px-5 cursor-pointer rounded-xl text-white bg-violet-500 disabled:opacity-50 ' disabled={domainStatus == true} >Create Store</button>
                         </div>
                         {message && <p className="text-center text-sm mt-3">{message}</p>}
                     </form>
