@@ -71,7 +71,7 @@ const CreateStore = () => {
             name: form.name.trim(),
             currency: form.currency,
             country: form.country,
-            domain: `${form.domain.trim()}`,
+            domain: form.domain.trim().toLowerCase(),
             category: form.category,
             email: form.email.trim(),
         };
