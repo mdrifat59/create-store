@@ -94,7 +94,7 @@ const CreateStore = () => {
 
     return (
         <>
-            <div className="w-full h-screen flex bg-[#f3f4f6] justify-center items-center ">
+            <div className="w-full min-h-screen flex bg-[#f3f4f6] justify-center items-center ">
                 <div className="w-full md:w-[950px] bg-[#ffffff] rounded-xl  p-7">
                     <h1 className='font-Roboto-Medium text-xl md:text-2xl lg:text-3xl'>Create a store</h1>
                     <h3 className='mt-5 mb-3 text-sm md:text-base text-mateBlack'>Add your basic store information and complete the setup</h3>
