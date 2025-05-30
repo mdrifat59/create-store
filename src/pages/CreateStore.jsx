@@ -44,20 +44,61 @@ const CreateStore = () => {
         return errors;
     };
 
+    // let checkDomain = () => {
+    //     if (!form.domain) return;
+    //     const fullDomain = `${form.domain}.expressitbd.com`;
+
+    //     axios.get(`https://interview-task-green.vercel.app/task/domains/check/${fullDomain}`)
+    //         .then((res) => {
+    //             setDomainStatus(res.data.data.taken);
+    //         })
+    //         .catch(() => {
+    //             setDomainStatus(true);
+    //         });
+    // };
+
+    // let handlesubmit = (e) => {
+    //     e.preventDefault();
+    //     const validationErrors = validate();
+    //     if (Object.keys(validationErrors).length > 0) {
+    //         setErrors(validationErrors);
+    //         return;
+    //     }
+
+    //     axios.post("https://interview-task-green.vercel.app/task/stores/create",  {
+    //         name: form.name,
+    //         currency: form.currency,
+    //         country: form.country,
+    //         domain: `${form.domain}.expressitbd.com`,
+    //         category: form.category,
+    //         email: form.email,
+    //     })
+    //         .then(() => {
+    //             setMessage("✅ Store created successfully!");
+    //         })
+    //         .catch((e) => {
+    //             setMessage("❌ Store creation failed.");
+    //             console.log(e);
+
+    //         });
+
+
+    // }
     let checkDomain = () => {
         if (!form.domain) return;
-        const fullDomain = `${form.domain}.expressitbd.com`;
+        const fullDomain = `${form.domain.trim()}.expressitbd.com`;
 
-        axios.get(`https://interview-task-green.vercel.app/task/domains/check/${fullDomain}`)
-            .then((res) => {
-                setDomainStatus(res.data.data.taken);
+        fetch(`https://interview-task-green.vercel.app/task/domains/check/${fullDomain}`)
+            .then((res) => res.json())
+            .then((data) => {
+                setDomainStatus(data.data.taken);
             })
             .catch(() => {
                 setDomainStatus(true);
             });
     };
 
-    let handlesubmit = (e) => {
+    let handlesubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
@@ -65,24 +106,55 @@ const CreateStore = () => {
             return;
         }
 
-        axios.post("https://interview-task-green.vercel.app/task/stores/create", {
-            name: form.name,
+        const payload = {
+            name: form.name.trim(),
             currency: form.currency,
             country: form.country,
-            domain: form.domain,
+            domain: `${form.domain.trim()}.expressitbd.com`,
             category: form.category,
-            email: form.email,
-        })
-            .then(() => {
-                setMessage("✅ Store created successfully!");
-            })
-            .catch(() => {
-                setMessage("❌ Store creation failed.");
+            email: form.email.trim(),
+        };
 
+        console.log("Sending store data:", payload);
+
+        // axios.post("https://interview-task-green.vercel.app/task/stores/create", payload)
+        //     .then(() => {
+        //         setMessage("✅ Store created successfully!");
+        //     })
+        //     .catch((error) => {
+        //         if (error.response) {
+        //             console.log("🔴 Full error response:", error.response.data); // 👈 Add this line
+        //             setMessage(`❌ ${error.response.data.message || "Store creation failed."}`);
+        //         } else {
+        //             console.log("🔴 Network error:", error.message);
+        //             setMessage("❌ Network or unexpected error.");
+        //         }
+        //     });
+
+        try {
+            const response = await fetch("https://interview-task-green.vercel.app/task/stores/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
             });
 
+            const data = await response.json();
 
-    }
+            if (!response.ok) {
+                // the server responded with an error
+                setMessage(`❌ ${data.message || "Store creation failed."}`);
+                console.error("Server error response:", data);
+            } else {
+                setMessage("✅ Store created successfully!");
+            }
+        } catch (error) {
+            console.error("Unexpected error:", error);
+            setMessage("❌ Network error or unexpected failure.");
+        }
+    };
+
     return (
         <>
             <div className="w-full h-screen flex bg-[#f3f4f6] justify-center items-center ">
